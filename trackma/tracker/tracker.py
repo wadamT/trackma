@@ -206,11 +206,11 @@ class TrackerBase(object):
 
             # Start our countdown
             (show, episode) = show_tuple
-            if state == utils.Tracker.PLAYING:
-                self.msg.info(self.name, 'Will update %s %d' %
+            if state == utils.TRACKER_PLAYING:
+                self.msg.info(self.name, 'Will update %s - %d' %
                               (show['title'], episode))
-            elif state == utils.Tracker.NOT_FOUND:
-                self.msg.info(self.name, 'Will add %s %d' %
+            elif state == utils.TRACKER_NOT_FOUND:
+                self.msg.info(self.name, 'Will add %s - %d' %
                               (show['title'], episode))
 
             self._update_show(state, show_tuple)
@@ -243,23 +243,19 @@ class TrackerBase(object):
             return (utils.Tracker.NOVIDEO, None)
 
         if filename:
+            if filename == self.last_filename:
+                # It's the exact same filename, there's no need to do the processing again
+                return (self.last_state, self.last_show_tuple)
+
+            self.last_filename = filename
             self.msg.debug(self.name, "Guessing filename: {}".format(filename))
 
             # Trim out watch dir
             if os.path.isabs(filename):
                 for watch_prefix in self.watch_dirs:
                     if filename.startswith(watch_prefix):
-                        filename = filename[len(watch_prefix):]
-                        if filename.startswith(os.path.sep):
-                            filename = filename[len(os.path.sep):]
+                        filename = filename[len(watch_prefix):].lstrip(os.path.sep)
                         break
-
-            if filename == self.last_filename:
-                # It's the exact same filename, there's no need to do the processing again
-                self.msg.debug(self.name, "Same filename as before. Skipping.")
-                return (self.last_state, self.last_show_tuple)
-
-            self.last_filename = filename
 
             # Do a regex to the filename to get
             # the show title and episode number

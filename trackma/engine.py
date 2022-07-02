@@ -438,7 +438,7 @@ class Engine:
 
             aie = AnimeInfoExtractor(filename)
             (show_title, ep) = aie.getName(), aie.getEpisode()
-            self.msg.debug(self.name, "Guessed {}".format(show_title))
+            self.msg.debug(self.name, "Show guess: {}".format(show_title))
 
             if show_title:
                 tracker_list = self._get_tracker_list()
@@ -790,7 +790,7 @@ class Engine:
             for fullpath, filename in utils.regex_find_videos(searchdir):
                 if self.config['library_full_path']:
                     filename = self._get_show_name_from_full_path(
-                        searchdir, fullpath).strip()
+                        searchdir, fullpath)
                 (library, library_cache) = self._add_show_to_library(
                     library, library_cache, rescan, fullpath, filename, tracker_list)
 
@@ -856,6 +856,7 @@ class Engine:
                 if show:
                     self.msg.debug(
                         self.name, "Adding to library: {}".format(fullpath))
+                    self.msg.debug(self.name, "Show guess: {}".format(show_title))
 
                     if show_ep_start == show_ep_end:
                         # TODO : Support redirections for episode ranges
@@ -863,7 +864,7 @@ class Engine:
                             (show, show_ep_start), self.redirections, tracker_list)
                         show_ep_end = show_ep_start = show_ep
 
-                        self.msg.debug(self.name, "Redirected to: {} {}".format(
+                        self.msg.debug(self.name, "Redirected to: {} - {}".format(
                             show['title'], show_ep))
                         library_cache[filename] = (show['id'], show_ep)
                     else:
@@ -1024,8 +1025,8 @@ class Engine:
 
     def _get_show_name_from_full_path(self, searchdir, fullpath):
         """Joins the directory name with the file name to return the show name."""
-        relative = fullpath[len(searchdir):]
-        return relative.replace(os.path.sep, " ")
+        relative = fullpath[len(searchdir):].lstrip(os.path.sep)
+        return relative
 
     def _searchdir_exists(self, path):
         """Variation of dir_exists that warns the user if the path doesn't exist."""
