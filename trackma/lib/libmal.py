@@ -228,6 +228,7 @@ class libmal(lib):
         self._set_userconfig('token_type',    data['token_type'])
         self._set_userconfig('expires',       timestamp + data['expires_in'])
         self._set_userconfig('refresh_token', data['refresh_token'])
+        self._set_userconfig('title', date['title'])
 
         self.logged_in = True
         self._emit_signal('userconfig_changed')
@@ -272,8 +273,14 @@ class libmal(lib):
                 showid = item['node']['id']
                 shows[showid] = utils.show()
                 shows[showid].update({
+                    
+                    if self._get_userconfig('title') == 'eng':
+                        title = item['node']['alternative_titles'].get('en') or item['node']['title'] ## Using OR to grab Romaji title when Eng title is not available.
+                    else:
+                        title = item['node']['title']
+
                     'id': showid,
-                    'title': item['node']['title'],
+                    'title': title,
                     'url': "https://myanimelist.net/%s/%d" % (self.mediatype, showid),
                     'aliases': self._get_aliases(item['node']),
                     'image': item['node'].get('main_picture', {}).get('large'),
@@ -371,10 +378,15 @@ class libmal(lib):
     def _parse_info(self, item):
         info = utils.show()
         showid = item['id']
+       
+        if self._get_userconfig('title') == 'eng':
+           title = item['alternative_titles'].get('en') or item['title'] ## Using OR to grab Romanji title when Eng title is not available.
+        else:
+           title = item['title']
         
         info.update({
             'id': showid,
-            'title': item['title'],
+            'title': title,
             'url': "https://myanimelist.net/%s/%d" % (self.mediatype, showid),
             'aliases': self._get_aliases(item),
             'type': self.type_translate[item['media_type']],
@@ -384,12 +396,13 @@ class libmal(lib):
             'start_date': self._str2date(item.get('start_date')),
             'end_date': self._str2date(item.get('end_date')),
             'extra': [
+                ('Romanji',         item['title'],
                 ('English',         item['alternative_titles'].get('en')),
                 ('Japanese',        item['alternative_titles'].get('ja')),
                 ('Synonyms',        item['alternative_titles'].get('synonyms')),
                 ('Synopsis',        item.get('synopsis')),
                 ('Type',            item.get('media_type')),
-                ('Mean score',   item.get('mean')),
+                ('Mean score',      item.get('mean')),
                 ('Status',          self._translate_status(item['status'])),
             ]
         })
